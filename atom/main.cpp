@@ -73,6 +73,15 @@ bool fullscreen = false;
 // mirrored display
 bool mirroredDisplay = false;
 
+const float NUCLEUS_RADIUS = 0.1;
+const float NUCLEUS_HEIGHT = 0.03;
+
+const float TORUS_INNER = 0.003;
+const float TORUS_OUTER = 0.2;
+
+const float PARTICLE_BOX = 0.2;
+const float PARTICLE_BOX_HEIGHT = 0.03;
+
 
 //------------------------------------------------------------------------------
 // DECLARED VARIABLES
@@ -125,6 +134,10 @@ string resourceRoot;
 // display level for collision tree
 int collisionTreeDisplayLevel = 0;
 
+// Atom nucleus
+cShapeTorus* shells[2];
+cShapeCylinder* nucleus;
+cShapeBox* particle_boxes[3];
 
 //------------------------------------------------------------------------------
 // DECLARED MACROS
@@ -257,7 +270,7 @@ int main(int argc, char* argv[])
     world->addChild(camera);
 
     // position and orient the camera
-    camera->set( cVector3d (0.8, 0.0, 0.5),    // camera position (eye)
+    camera->set( cVector3d (0.1, 0.0, 1.0),    // camera position (eye)
                  cVector3d (0.0, 0.0, 0.0),    // lookat position (target)
                  cVector3d (0.0, 0.0, 1.0));   // direction of the (up) vector
 
@@ -288,12 +301,12 @@ int main(int argc, char* argv[])
     light->setEnabled(true);
 
     // define the direction of the light beam
-    light->setDir(-3.0,-0.5, 0.0);
+    light->setDir(0.0,0.0, 0.0);
 
     // set lighting conditions
-    light->m_ambient.set(0.4, 0.4, 0.4);
+    light->m_ambient.set(1.0, 1.0, 1.0);
     light->m_diffuse.set(0.8, 0.8, 0.8);
-    light->m_specular.set(1.0, 1.0, 1.0);
+    light->m_specular.set(0.0, 0.0, 0.0);
 
 
     //--------------------------------------------------------------------------
@@ -307,7 +320,7 @@ int main(int argc, char* argv[])
     handler->getDevice(hapticDevice, 0);
 
     // retrieve information about the current haptic device
-    cHapticDeviceInfo hapticDeviceInfo = hapticDevice->getSpecifications();
+    //cHapticDeviceInfo hapticDeviceInfo = hapticDevice->getSpecifications();
 
     // create a tool (cursor) and insert into the world
     tool = new cToolCursor(world);
@@ -343,8 +356,48 @@ int main(int argc, char* argv[])
     //--------------------------------------------------------------------------
     // CREATE OBJECTS
     //--------------------------------------------------------------------------
+    cMaterialPtr nucleus_mat;
+    cMaterial* c = new cMaterial();
+    c->setBlack();
+    nucleus_mat = cMaterialPtr(c);
 
+    nucleus = new cShapeCylinder(NUCLEUS_RADIUS, NUCLEUS_RADIUS, NUCLEUS_HEIGHT, nucleus_mat);
+    world->addChild(nucleus);
 
+    cMaterialPtr torus_mat;
+    cMaterial* c_torus = new cMaterial();
+    c_torus->setBlack();
+    torus_mat = cMaterialPtr(c_torus);
+    // Shell 1
+    shells[0] = new cShapeTorus(TORUS_INNER, TORUS_OUTER, torus_mat);
+    world->addChild(shells[0]);
+    // Shell 2
+    shells[1] = new cShapeTorus(TORUS_INNER, TORUS_OUTER+0.1, torus_mat);
+    world->addChild(shells[1]);
+
+    cMaterialPtr electron_mat;
+    cMaterial* c_electron = new cMaterial();
+    c_electron->setBlue();
+    electron_mat = cMaterialPtr(c_electron);
+    particle_boxes[0] = new cShapeBox(PARTICLE_BOX, PARTICLE_BOX, PARTICLE_BOX_HEIGHT, electron_mat);
+    world->addChild(particle_boxes[0]);
+    particle_boxes[0]->setLocalPos(-0.3,0.5,0.0);
+
+    cMaterialPtr proton_mat;
+    cMaterial* c_proton = new cMaterial();
+    c_proton->setOrangeRed();
+    proton_mat = cMaterialPtr(c_proton);
+    particle_boxes[1] = new cShapeBox(PARTICLE_BOX, PARTICLE_BOX, PARTICLE_BOX_HEIGHT, proton_mat);
+    world->addChild(particle_boxes[1]);
+    particle_boxes[1]->setLocalPos(0.0,0.5,0.0);
+
+    cMaterialPtr neutron_mat;
+    cMaterial* c_neutron = new cMaterial();
+    c_neutron->setGray();
+    neutron_mat = cMaterialPtr(c_neutron);
+    particle_boxes[2] = new cShapeBox(PARTICLE_BOX, PARTICLE_BOX, PARTICLE_BOX_HEIGHT, neutron_mat);
+    world->addChild(particle_boxes[2]);
+    particle_boxes[2]->setLocalPos(0.3,0.5,0.0);
 
     //--------------------------------------------------------------------------
     // WIDGETS
