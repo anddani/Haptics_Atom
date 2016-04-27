@@ -87,9 +87,6 @@ cCamera* camera;
 // a light source to illuminate the objects in the world
 cDirectionalLight *light;
 
-// a virtual object
-cMultiMesh* object;
-
 // rotational velocity of the object
 cVector3d rotVel;
 
@@ -344,58 +341,10 @@ int main(int argc, char* argv[])
 
 
     //--------------------------------------------------------------------------
-    // CREATE OBJECT
+    // CREATE OBJECTS
     //--------------------------------------------------------------------------
 
-    // read the scale factor between the physical workspace of the haptic
-    // device and the virtual workspace defined for the tool
-    double workspaceScaleFactor = tool->getWorkspaceScaleFactor();
 
-    // stiffness properties
-    double maxStiffness	= hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor;
-
-    // create a virtual mesh
-    object = new cMultiMesh();
-
-    // add object to world
-    world->addChild(object);
-
-    // load an object file
-    bool fileload;
-    fileload = object->loadFromFile("cup.obj");
-
-    if (!fileload)
-    {
-        cout << "Error - 3D Model failed to load correctly" << endl;
-        close();
-        return (-1);
-    }
-
-    // disable culling so that faces are rendered on both sides
-    object->setUseCulling(false);
-
-
-    cMaterial m;
-    m.setBlueCadet();
-    object->setMaterial(m);
-
-     // compute a boundary box
-    object->computeBoundaryBox(true);
-
-    // show/hide bounding box
-    object->setShowBoundaryBox(false);
-
-    // compute collision detection algorithm
-    object->createAABBCollisionDetector(toolRadius);
-
-    // define a default stiffness for the object
-    object->setStiffness(0.5 * maxStiffness, true);
-
-    // define some haptic friction properties
-    object->setFriction(0.1, 0.2, true);
-
-    // enable display list for faster graphic rendering
-    object->setUseDisplayList(true);
 
     //--------------------------------------------------------------------------
     // WIDGETS
@@ -458,48 +407,6 @@ void keySelect(unsigned char key, int x, int y)
 
         // exit application
         exit(0);
-    }
-
-    // option 1: show/hide texture
-    if (key == '1')
-    {
-        bool useTexture = object->getUseTexture();
-        object->setUseTexture(!useTexture);
-    }
-
-    // option 2: enable/disable wire mode
-    if (key == '2')
-    {
-        bool useWireMode = object->getWireMode();
-        object->setWireMode(!useWireMode, true);
-    }
-
-    // option 3: show/hide collision detection tree
-    if (key == '3')
-    {
-        cColorf color = cColorf(1.0, 0.0, 0.0);
-        object->setCollisionDetectorProperties(collisionTreeDisplayLevel, color, true);
-        bool show = object->getShowCollisionDetector();
-        object->setShowCollisionDetector(!show, true);
-    }
-
-    // option -:
-    if (key == '-')
-    {
-        collisionTreeDisplayLevel--;
-        if (collisionTreeDisplayLevel < 0) { collisionTreeDisplayLevel = 0; }
-        cColorf color = cColorf(1.0, 0.0, 0.0);
-        object->setCollisionDetectorProperties(collisionTreeDisplayLevel, color, true);
-        object->setShowCollisionDetector(true, true);
-    }
-
-    // option +:
-    if (key == '+')
-    {
-        collisionTreeDisplayLevel++;
-        cColorf color = cColorf(1.0, 0.0, 0.0);
-        object->setCollisionDetectorProperties(collisionTreeDisplayLevel, color, true);
-        object->setShowCollisionDetector(true, true);
     }
 
     // option f: toggle fullscreen
@@ -640,81 +547,6 @@ void updateHaptics(void)
         // temp variable to compute rotational acceleration
         cVector3d rotAcc(0,0,0);
 
-        // check if tool is touching an object
-        cGenericObject* objectContact = nullptr;
-        if (tool->m_hapticPoint->getNumCollisionEvents() > 0)
-        {
-            // get contact event
-            cCollisionEvent* collisionEvent = tool->m_hapticPoint->getCollisionEvent(0);
-
-            // get object from contact event
-            objectContact = collisionEvent->m_object;
-
-            if (tool->getUserSwitch(0) == 1) {
-
-
-                //cVector3d force(0, 0, 0);
-                //tool->getHapticDevice()->setForce(force);
-
-//                cVector3d newPosition;
-//                hapticDevice->getPosition(newPosition);
-//                cVector3d proxyPos;
-//                proxyPos.x(newPosition.x());
-//                proxyPos.y(newPosition.y());
-//                proxyPos.z(newPosition.z());
-//                object->setLocalPos(proxyPos);
-
-                cVector3d force(0, 0, -10);
-                tool->getHapticDevice()->setForce(force);
-                objectContact->setLocalPos(tool->getDeviceGlobalPos());
-            }
-        }
-
-        if (tool->getUserSwitch(0) != 1) {
-
-            cVector3d force(0, 0, 0);
-            tool->getHapticDevice()->setForce(force);
-
-            //object->getHapticDevice()->setForce(force);
-
-        }
-
-        /*if (objectContact != NULL)
-        {
-            // retrieve the root of the object mesh
-            cGenericObject* obj = objectContact;
-
-            // get position of cursor in global coordinates
-            cVector3d toolPos = tool->getDeviceGlobalPos();
-
-            // get position of object in global coordinates
-            cVector3d objectPos = obj->getGlobalPos();
-
-            // compute a vector from the center of mass of the object (point of rotation) to the tool
-            cVector3d vObjectCMToTool = cSub(toolPos, objectPos);
-
-
-            // compute acceleration based on the interaction forces
-            // between the tool and the object
-            if (vObjectCMToTool.length() > 0.0)
-            {
-                // get the last force applied to the cursor in global coordinates
-                // we negate the result to obtain the opposite force that is applied on the
-                // object
-                cVector3d toolForce = cNegate(tool->m_lastComputedGlobalForce);
-
-                // compute effective force to take into account the fact the object
-                // can only rotate around a its center mass and not translate
-                cVector3d effectiveForce = toolForce - cProject(toolForce, vObjectCMToTool);
-
-                // compute the resulting torque
-                cVector3d torque = cMul(vObjectCMToTool.length(), cCross( cNormalize(vObjectCMToTool), effectiveForce));
-
-                // update rotational acceleration
-                const double OBJECT_INERTIA = 0.4;
-                rotAcc = (1.0 / OBJECT_INERTIA) * torque;
-            }
-        }*/
 
         // update rotational velocity
         rotVel.add(timeInterval * rotAcc);
@@ -735,12 +567,6 @@ void updateHaptics(void)
         if (tool->getUserSwitch(0) == 1)
         {
             rotVel.zero();
-        }
-
-        // compute the next rotation configuration of the object
-        if (rotVel.length() > chai3d::C_SMALL)
-        {
-            object->rotateAboutGlobalAxisRad(cNormalize(rotVel), timeInterval * rotVel.length());
         }
     }
 
