@@ -138,6 +138,11 @@ int collisionTreeDisplayLevel = 0;
 cShapeTorus* shells[2];
 cShapeCylinder* nucleus;
 cShapeBox* particle_boxes[3];
+cShapeBox* chosen_atom;
+cLabel* atom_num;
+cLabel* atom_label;
+cLabel* atom_name;
+cLabel* particle_labels[3];
 
 //------------------------------------------------------------------------------
 // DECLARED MACROS
@@ -399,12 +404,25 @@ int main(int argc, char* argv[])
     world->addChild(particle_boxes[2]);
     particle_boxes[2]->setLocalPos(0.3,0.5,0.0);
 
+    cMaterialPtr chosen_atom_mat;
+    cMaterial* c_chosen = new cMaterial();
+    c_chosen->setYellow();
+    chosen_atom_mat = cMaterialPtr(c_chosen);
+    chosen_atom = new cShapeBox(PARTICLE_BOX, PARTICLE_BOX, PARTICLE_BOX_HEIGHT,chosen_atom_mat);
+    world->addChild(chosen_atom);
+    chosen_atom->setLocalPos(-0.3,-0.5,0.0);
+
+
+
+
     //--------------------------------------------------------------------------
     // WIDGETS
     //--------------------------------------------------------------------------
 
     // create a font
     cFont *font = NEW_CFONTCALIBRI20();
+    cFont *font_name = NEW_CFONTCALIBRI28();
+    cFont *font_label = NEW_CFONTCALIBRI72();
 
     // create a label to display the haptic rate of the simulation
     labelHapticRate = new cLabel(font);
@@ -420,6 +438,24 @@ int main(int argc, char* argv[])
                                      cColorf(1.0, 1.0, 1.0),
                                      cColorf(0.8, 0.8, 0.8),
                                      cColorf(0.8, 0.8, 0.8));
+
+    atom_num = new cLabel(font);
+    atom_num->m_fontColor.setBlack();
+    camera->m_frontLayer->addChild(atom_num);
+
+    atom_label = new cLabel(font_label);
+    atom_label->m_fontColor.setBlack();
+    camera->m_frontLayer->addChild(atom_label);
+
+    atom_name = new cLabel(font_name);
+    atom_name->m_fontColor.setBlack();
+    camera->m_frontLayer->addChild(atom_name);
+
+    for (int i = 0; i < 3; i++){
+        particle_labels[i] = new cLabel(font_name);
+        particle_labels[i]->m_fontColor.setBlack();
+        camera->m_frontLayer->addChild(particle_labels[i]);
+    }
 
     //--------------------------------------------------------------------------
     // START SIMULATION
@@ -530,6 +566,22 @@ void updateGraphics(void)
     // update position of label
     labelHapticRate->setLocalPos((int)(0.5 * (windowW - labelHapticRate->getWidth())), 15);
 
+    atom_num->setString("8");
+    atom_num->setLocalPos(64, 480);
+
+    atom_label->setString("O");
+    atom_label->setLocalPos(87, 417);
+
+    atom_name->setString("Syre");
+    atom_name->setLocalPos(58, 395);
+
+    particle_labels[0]->setString("e-");
+    particle_labels[1]->setString("p+");
+    particle_labels[2]->setString("n");
+    particle_labels[0]->setLocalPos(630,480);
+    particle_labels[1]->setLocalPos(630,300);
+    particle_labels[2]->setLocalPos(630,120);
+
 
     /////////////////////////////////////////////////////////////////////
     // RENDER SCENE
@@ -626,20 +678,3 @@ void updateHaptics(void)
     // exit haptics thread
     simulationFinished = true;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
