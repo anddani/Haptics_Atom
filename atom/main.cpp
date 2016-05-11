@@ -149,6 +149,10 @@ cLabel* particle_labels[3];
 // Selected atom particle
 cShapeSphere* selected_particle;
 
+// Selected_particle material
+cMaterialPtr select_nothing;
+cMaterialPtr select_electron;
+
 //------------------------------------------------------------------------------
 // DECLARED MACROS
 //------------------------------------------------------------------------------
@@ -380,6 +384,14 @@ int main(int argc, char* argv[])
     rot1.rotateAboutGlobalAxisDeg(cVector3d(0,1,0), 57);
 
     /*
+     * Selected particle materials
+     */
+    select_nothing = cMaterialPtr(new cMaterial());
+    select_nothing->setTransparencyLevel(1.0);
+    select_electron = cMaterialPtr(new cMaterial());
+    select_electron->setBlue();
+
+    /*
      * Nucleus cylinder
      */
     cMaterialPtr nucleus_mat;
@@ -467,6 +479,9 @@ int main(int argc, char* argv[])
     selected_particle_mat = cMaterialPtr(c_selected);
     selected_particle = new cShapeSphere(SELECTED_PARTICLE_RADIUS, selected_particle_mat);
     world->addChild(selected_particle);
+
+
+
 
 
 
@@ -637,6 +652,15 @@ void updateGraphics(void)
     particle_labels[0]->setLocalPos((int)(0.39 * (windowW - particle_labels[0]->getWidth())),(int)(0.835 * (windowH - particle_labels[0]->getHeight())));
     particle_labels[1]->setLocalPos((int)(0.39 * (windowW - particle_labels[1]->getWidth())),(int)(0.520 * (windowH - particle_labels[1]->getHeight())));
     particle_labels[2]->setLocalPos((int)(0.39 * (windowW - particle_labels[2]->getWidth())),(int)(0.190 * (windowH - particle_labels[2]->getHeight())));
+
+    bool buttonStatus;
+    hapticDevice->getUserSwitch(0, buttonStatus);
+    if (buttonStatus) {
+        selected_particle->setMaterial(select_electron);
+    } else {
+        selected_particle->setMaterial(select_nothing);
+    }
+
 
 
     /////////////////////////////////////////////////////////////////////
