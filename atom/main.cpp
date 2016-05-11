@@ -79,7 +79,7 @@ const float NUCLEUS_HEIGHT = 0.03;
 const float TORUS_INNER = 0.003;
 const float TORUS_OUTER = 0.2;
 
-const float PARTICLE_BOX = 0.2;
+const float PARTICLE_BOX = 0.17;
 const float PARTICLE_BOX_HEIGHT = 0.03;
 
 
@@ -275,16 +275,22 @@ int main(int argc, char* argv[])
     world->addChild(camera);
 
     // position and orient the camera
-    camera->set( cVector3d (0.8, 0.0, 0.5),    // camera position (eye)
+    camera->set( cVector3d (2, 0.0, 0),    // camera position (eye)
                  cVector3d (0.0, 0.0, 0.0),    // lookat position (target)
                  cVector3d (0.0, 0.0, 1.0));   // direction of the (up) vector
 
     // set the near and far clipping planes of the camera
     // anything in front/behind these clipping planes will not be rendered
-    camera->setClippingPlanes(0.01, 100);
+    //camera->setClippingPlanes(0.01, 100);
+    camera->setClippingPlanes(0.01, 10.0);
 
     // set stereo mode
-    camera->setStereoMode(stereoMode);
+    //camera->setStereoMode(stereoMode);
+    if (stereoMode == C_STEREO_DISABLED)
+        {
+            camera->setOrthographicView(1.3);
+        }
+
 
     // set stereo eye separation and focal length (applies only if stereo is enabled)
     camera->setStereoEyeSeparation(0.03);
@@ -363,8 +369,14 @@ int main(int argc, char* argv[])
     //--------------------------------------------------------------------------
     cMatrix3d rot;
     rot.identity();
-    rot.rotateAboutGlobalAxisDeg(cVector3d(0,1,0), 45);
+    rot.rotateAboutGlobalAxisDeg(cVector3d(0,1,0), 90);
+    cMatrix3d rot1;
+    rot1.identity();
+    rot1.rotateAboutGlobalAxisDeg(cVector3d(0,1,0), 57);
 
+    /*
+     * Nucleus cylinder
+     */
     cMaterialPtr nucleus_mat;
     cMaterial* c = new cMaterial();
     c->setBlack();
@@ -373,7 +385,11 @@ int main(int argc, char* argv[])
     nucleus = new cShapeCylinder(NUCLEUS_RADIUS, NUCLEUS_RADIUS, NUCLEUS_HEIGHT, nucleus_mat);
     nucleus->setLocalRot(rot);
     world->addChild(nucleus);
+    nucleus->setLocalPos(0.0,0.2,0.0);
 
+    /*
+     * Shell toruses
+     */
     cMaterialPtr torus_mat;
     cMaterial* c_torus = new cMaterial();
     c_torus->setBlack();
@@ -386,42 +402,56 @@ int main(int argc, char* argv[])
     shells[1] = new cShapeTorus(TORUS_INNER, TORUS_OUTER+0.1, torus_mat);
     shells[1]->setLocalRot(rot);
     world->addChild(shells[1]);
+    shells[0]->setLocalPos(0.0,0.2,0.0);
+    shells[1]->setLocalPos(0.0,0.2,0.0);
 
+    /*
+     * Electron box
+     */
     cMaterialPtr electron_mat;
     cMaterial* c_electron = new cMaterial();
     c_electron->setBlue();
     electron_mat = cMaterialPtr(c_electron);
     particle_boxes[0] = new cShapeBox(PARTICLE_BOX, PARTICLE_BOX, PARTICLE_BOX_HEIGHT, electron_mat);
-    particle_boxes[0]->setLocalRot(rot);
+    particle_boxes[0]->setLocalRot(rot1);
     world->addChild(particle_boxes[0]);
-    particle_boxes[0]->setLocalPos(-0.3,0.5,0.0);
+    particle_boxes[0]->setLocalPos(0.0,-0.25,0.25);
 
+    /*
+     * Proton box
+     */
     cMaterialPtr proton_mat;
     cMaterial* c_proton = new cMaterial();
     c_proton->setOrangeRed();
     proton_mat = cMaterialPtr(c_proton);
     particle_boxes[1] = new cShapeBox(PARTICLE_BOX, PARTICLE_BOX, PARTICLE_BOX_HEIGHT, proton_mat);
-    particle_boxes[1]->setLocalRot(rot);
+    particle_boxes[1]->setLocalRot(rot1);
     world->addChild(particle_boxes[1]);
-    particle_boxes[1]->setLocalPos(0.0,0.5,0.0);
+    particle_boxes[1]->setLocalPos(0.0,-0.25,0.0);
 
+    /*
+     * Neutron box
+     */
     cMaterialPtr neutron_mat;
     cMaterial* c_neutron = new cMaterial();
     c_neutron->setGray();
     neutron_mat = cMaterialPtr(c_neutron);
     particle_boxes[2] = new cShapeBox(PARTICLE_BOX, PARTICLE_BOX, PARTICLE_BOX_HEIGHT, neutron_mat);
-    particle_boxes[2]->setLocalRot(rot);
+    particle_boxes[2]->setLocalRot(rot1);
     world->addChild(particle_boxes[2]);
-    particle_boxes[2]->setLocalPos(0.3,0.5,0.0);
+    particle_boxes[2]->setLocalPos(0.0,-0.25,-0.25);
 
+    /*
+     * Chosen atom box
+     */
     cMaterialPtr chosen_atom_mat;
     cMaterial* c_chosen = new cMaterial();
     c_chosen->setYellow();
     chosen_atom_mat = cMaterialPtr(c_chosen);
     chosen_atom = new cShapeBox(PARTICLE_BOX, PARTICLE_BOX, PARTICLE_BOX_HEIGHT,chosen_atom_mat);
-    chosen_atom->setLocalRot(rot);
+    chosen_atom->setLocalRot(rot1);
     world->addChild(chosen_atom);
-    chosen_atom->setLocalPos(-0.3,-0.5,0.0);
+    chosen_atom->setLocalPos(0.0,-0.48,0.28);
 
 
 
