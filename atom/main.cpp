@@ -695,7 +695,7 @@ void updateHaptics(void)
         // update selected particle to cursor
         cVector3d proxy_pos, tool_pos;
         //hapticDevice->getPosition(tool_pos);
-        hapticDevice->getPosition(tool_pos);
+        tool_pos = tool->getDeviceLocalPos();
         proxy_pos.x(tool_pos.x() + SELECTED_PARTICLE_RADIUS);
         proxy_pos.y(tool_pos.y() + SELECTED_PARTICLE_RADIUS);
         proxy_pos.z(tool_pos.z());
