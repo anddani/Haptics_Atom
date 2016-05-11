@@ -607,21 +607,22 @@ void updateGraphics(void)
     // update position of label
     labelHapticRate->setLocalPos((int)(0.5 * (windowW - labelHapticRate->getWidth())), 15);
 
+    //cVector3d chosen_atom_loc = chosen_atom->getGlobalPos();
     atom_num->setString("8");
-    atom_num->setLocalPos(64, 480);
+    atom_num->setLocalPos((int)(0.089 * (windowW - atom_num->getWidth())),(int)(0.93 * (windowH - atom_num->getHeight())));
 
     atom_label->setString("O");
-    atom_label->setLocalPos(87, 417);
+    atom_label->setLocalPos((int)(0.11 * (windowW - atom_label->getWidth())),(int)(0.91 * (windowH - atom_label->getHeight())));
 
     atom_name->setString("Syre");
-    atom_name->setLocalPos(58, 395);
+    atom_name->setLocalPos((int)(0.08 * (windowW - atom_name->getWidth())),(int)(0.81 * (windowH - atom_name->getHeight())));
 
     particle_labels[0]->setString("e-");
     particle_labels[1]->setString("p+");
     particle_labels[2]->setString("n");
-    particle_labels[0]->setLocalPos(630,480);
-    particle_labels[1]->setLocalPos(630,300);
-    particle_labels[2]->setLocalPos(630,120);
+    particle_labels[0]->setLocalPos((int)(0.39 * (windowW - particle_labels[0]->getWidth())),(int)(0.835 * (windowH - particle_labels[0]->getHeight())));
+    particle_labels[1]->setLocalPos((int)(0.39 * (windowW - particle_labels[1]->getWidth())),(int)(0.520 * (windowH - particle_labels[1]->getHeight())));
+    particle_labels[2]->setLocalPos((int)(0.39 * (windowW - particle_labels[2]->getWidth())),(int)(0.190 * (windowH - particle_labels[2]->getHeight())));
 
 
     /////////////////////////////////////////////////////////////////////
