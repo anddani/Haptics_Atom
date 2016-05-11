@@ -82,6 +82,8 @@ const float TORUS_OUTER = 0.2;
 const float PARTICLE_BOX = 0.17;
 const float PARTICLE_BOX_HEIGHT = 0.03;
 
+const float SELECTED_PARTICLE_RADIUS = 0.01;
+
 
 //------------------------------------------------------------------------------
 // DECLARED VARIABLES
@@ -143,6 +145,9 @@ cLabel* atom_num;
 cLabel* atom_label;
 cLabel* atom_name;
 cLabel* particle_labels[3];
+
+// Selected atom particle
+cShapeSphere* selected_particle;
 
 //------------------------------------------------------------------------------
 // DECLARED MACROS
@@ -358,7 +363,7 @@ int main(int argc, char* argv[])
     tool->enableDynamicObjects(true);
 
     // map the physical workspace of the haptic device to a larger virtual workspace.
-    tool->setWorkspaceRadius(0.3);
+    tool->setWorkspaceRadius(0.4);
 
     // start the haptic tool
     tool->start();
@@ -453,6 +458,15 @@ int main(int argc, char* argv[])
     world->addChild(chosen_atom);
     chosen_atom->setLocalPos(0.0,-0.48,0.28);
 
+    /*
+     * Selected particle sphere
+     */
+    cMaterialPtr selected_particle_mat;
+    cMaterial* c_selected = new cMaterial();
+    c_selected->setBlue();
+    selected_particle_mat = cMaterialPtr(c_selected);
+    selected_particle = new cShapeSphere(SELECTED_PARTICLE_RADIUS, selected_particle_mat);
+    world->addChild(selected_particle);
 
 
 
@@ -664,6 +678,8 @@ void updateHaptics(void)
         // HAPTIC RENDERING
         /////////////////////////////////////////////////////////////////////////
 
+
+
         // update frequency counter
         frequencyCounter.signal(1);
 
@@ -675,6 +691,15 @@ void updateHaptics(void)
 
         // compute interaction forces
         tool->computeInteractionForces();
+
+        // update selected particle to cursor
+        cVector3d proxy_pos, tool_pos;
+        //hapticDevice->getPosition(tool_pos);
+        hapticDevice->getPosition(tool_pos);
+        proxy_pos.x(tool_pos.x() + SELECTED_PARTICLE_RADIUS);
+        proxy_pos.y(tool_pos.y() + SELECTED_PARTICLE_RADIUS);
+        proxy_pos.z(tool_pos.z());
+        selected_particle->setLocalPos(proxy_pos);
 
         // send forces to haptic device
         //tool->applyForces();
