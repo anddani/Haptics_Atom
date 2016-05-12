@@ -740,8 +740,7 @@ void updateHaptics(void)
         unit_vector.normalize();
 
         cVector3d force(0, 0, 0);
-        // If user has picked up a electron, set magnetical effect around shell
-        if (ELECTRON == is_selected) {
+        if (ELECTRON == is_selected) { // If user has picked up a electron, set magnetical effect around shell
 
             for (int i = 0; i < NUM_SHELLS; i++) {
             // If we are within the force field
@@ -768,6 +767,16 @@ void updateHaptics(void)
                     force.x(0);
                     force.y(0);
                     force.z(0);
+                }
+            }
+        } else if (PROTON == is_selected || NEUTRON == is_selected) {
+            // If cursor is close to the nucleus in the y-z plane, set force to centrum
+            if (temp_vector.length() < (NUCLEUS_RADIUS + 0.05)) {
+                if (temp_vector.length() >= NUCLEUS_RADIUS) {
+                    force = -unit_vector * 50 * temp_vector.length();
+                }
+                if (proxy_pos.x() < 0.05) {
+                    force.x(10);
                 }
             }
         }
