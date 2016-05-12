@@ -150,8 +150,7 @@ cLabel* particle_labels[3];
 cShapeSphere* selected_particle;
 
 // Selected_particle material
-cMaterialPtr select_nothing;
-cMaterialPtr select_electron;
+cMaterialPtr select_material[3];
 
 //------------------------------------------------------------------------------
 // DECLARED MACROS
@@ -386,10 +385,13 @@ int main(int argc, char* argv[])
     /*
      * Selected particle materials
      */
-    select_nothing = cMaterialPtr(new cMaterial());
-    select_nothing->setTransparencyLevel(1.0);
-    select_electron = cMaterialPtr(new cMaterial());
-    select_electron->setBlue();
+    for (int i = 0; i < 3; i++) {
+        select_material[i] = cMaterialPtr(new cMaterial());
+    }
+    select_material[0]->setBlue();
+    select_material[1]->setOrangeRed();
+    select_material[2]->setGray();
+
 
     /*
      * Nucleus cylinder
@@ -422,41 +424,12 @@ int main(int argc, char* argv[])
     shells[0]->setLocalPos(0.0,0.2,0.0);
     shells[1]->setLocalPos(0.0,0.2,0.0);
 
-    /*
-     * Electron box
-     */
-    cMaterialPtr electron_mat;
-    cMaterial* c_electron = new cMaterial();
-    c_electron->setBlue();
-    electron_mat = cMaterialPtr(c_electron);
-    particle_boxes[0] = new cShapeBox(PARTICLE_BOX, PARTICLE_BOX, PARTICLE_BOX_HEIGHT, electron_mat);
-    particle_boxes[0]->setLocalRot(rot1);
-    world->addChild(particle_boxes[0]);
-    particle_boxes[0]->setLocalPos(0.0,-0.25,0.25);
-
-    /*
-     * Proton box
-     */
-    cMaterialPtr proton_mat;
-    cMaterial* c_proton = new cMaterial();
-    c_proton->setOrangeRed();
-    proton_mat = cMaterialPtr(c_proton);
-    particle_boxes[1] = new cShapeBox(PARTICLE_BOX, PARTICLE_BOX, PARTICLE_BOX_HEIGHT, proton_mat);
-    particle_boxes[1]->setLocalRot(rot1);
-    world->addChild(particle_boxes[1]);
-    particle_boxes[1]->setLocalPos(0.0,-0.25,0.0);
-
-    /*
-     * Neutron box
-     */
-    cMaterialPtr neutron_mat;
-    cMaterial* c_neutron = new cMaterial();
-    c_neutron->setGray();
-    neutron_mat = cMaterialPtr(c_neutron);
-    particle_boxes[2] = new cShapeBox(PARTICLE_BOX, PARTICLE_BOX, PARTICLE_BOX_HEIGHT, neutron_mat);
-    particle_boxes[2]->setLocalRot(rot1);
-    world->addChild(particle_boxes[2]);
-    particle_boxes[2]->setLocalPos(0.0,-0.25,-0.25);
+    for (int i = 0; i < 3; i++) {
+        particle_boxes[i] = new cShapeBox(PARTICLE_BOX, PARTICLE_BOX, PARTICLE_BOX_HEIGHT, select_material[i]);
+        particle_boxes[i]->setLocalRot(rot1);
+        world->addChild(particle_boxes[i]);
+        particle_boxes[i]->setLocalPos(0.0,-0.25,0.25-i*0.25);
+    }
 
     /*
      * Chosen atom box
@@ -470,6 +443,7 @@ int main(int argc, char* argv[])
     world->addChild(chosen_atom);
     chosen_atom->setLocalPos(0.0,-0.48,0.28);
 
+
     /*
      * Selected particle sphere
      */
@@ -479,9 +453,6 @@ int main(int argc, char* argv[])
     selected_particle_mat = cMaterialPtr(c_selected);
     selected_particle = new cShapeSphere(SELECTED_PARTICLE_RADIUS, selected_particle_mat);
     world->addChild(selected_particle);
-
-
-
 
 
 
@@ -656,9 +627,14 @@ void updateGraphics(void)
     bool buttonStatus;
     hapticDevice->getUserSwitch(0, buttonStatus);
     if (buttonStatus) {
-        selected_particle->setMaterial(select_electron);
+        // Check collision and set color
+        for (int i = 0; i < 3; i++) {
+            // If collision -> set colors
+            selected_particle->setMaterial(select_material[0]);
+            selected_particle->setShowEnabled(true,true);
+        }
     } else {
-        selected_particle->setMaterial(select_nothing);
+        selected_particle->setShowEnabled(false,false);
     }
 
 
