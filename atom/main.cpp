@@ -86,6 +86,9 @@ const float SELECTED_PARTICLE_RADIUS = 0.01;
 
 const int NUM_SHELLS = 2;
 const int NUM_PARTICLE_TYPE = 3;
+const int ELECTRON = 0;
+const int PROTON = 1;
+const int NEUTRON = 2;
 
 
 //------------------------------------------------------------------------------
@@ -151,6 +154,7 @@ cLabel* particle_labels[NUM_PARTICLE_TYPE];
 
 // Selected atom particle
 cShapeSphere* selected_particle;
+int is_selected = -1;
 
 // Selected_particle material
 cMaterialPtr select_material[NUM_PARTICLE_TYPE];
@@ -214,15 +218,11 @@ int main(int argc, char* argv[])
     cout << "DH2626 - Lab 2" << endl;
     cout << "-----------------------------------" << endl << endl << endl;
     cout << "Keyboard Options:" << endl << endl;
-    cout << "[1] - Texture   (ON/OFF)" << endl;
-    cout << "[2] - Wireframe (ON/OFF)" << endl;
-    cout << "[3] - Collision tree (ON/OFF)" << endl;
-    cout << "[+] - Increase collision tree display depth" << endl;
-    cout << "[-] - Decrease collision tree display depth" << endl;
+    cout << "[1] - Get new atom" << endl;
     cout << "[f] - Enable/Disable full screen mode" << endl;
-    cout << "[m] - Enable/Disable vertical mirroring" << endl;
     cout << "[x] - Exit application" << endl;
     cout << endl << endl;
+    cout << "selected: " << is_selected << endl;
 
     // parse first arg to try and locate resources
     resourceRoot = string(argv[0]).substr(0,string(argv[0]).find_last_of("/\\")+1);
@@ -295,12 +295,9 @@ int main(int argc, char* argv[])
     //camera->setClippingPlanes(0.01, 100);
     camera->setClippingPlanes(0.01, 10.0);
 
-    // set stereo mode
-    //camera->setStereoMode(stereoMode);
-    if (stereoMode == C_STEREO_DISABLED)
-        {
-            camera->setOrthographicView(1.3);
-        }
+    // Set orthogonalic view
+    camera->setOrthographicView(1.3);
+
 
 
     // set stereo eye separation and focal length (applies only if stereo is enabled)
@@ -390,10 +387,11 @@ int main(int argc, char* argv[])
      */
     for (int i = 0; i < NUM_PARTICLE_TYPE; i++) {
         select_material[i] = cMaterialPtr(new cMaterial());
+        is_selected = -1;
     }
-    select_material[0]->setBlue();
-    select_material[1]->setOrangeRed();
-    select_material[2]->setGray();
+    select_material[ELECTRON]->setBlue();
+    select_material[PROTON]->setOrangeRed();
+    select_material[NEUTRON]->setGray();
 
 
     /*
@@ -407,7 +405,7 @@ int main(int argc, char* argv[])
     nucleus = new cShapeCylinder(NUCLEUS_RADIUS, NUCLEUS_RADIUS, NUCLEUS_HEIGHT, nucleus_mat);
     nucleus->setLocalRot(rot);
     world->addChild(nucleus);
-    nucleus->setLocalPos(0.0,0.2,0.0);
+    nucleus->setLocalPos(0.0,0.0,0.0);
 
     /*
      * Shell toruses
@@ -420,8 +418,7 @@ int main(int argc, char* argv[])
         shells[i]->setLocalRot(rot);
         world->addChild(shells[i]);
 
-        shells[i]->setLocalPos(0.0,0.2,0.0);
-
+        shells[i]->setLocalPos(0.0,0.0,0.0);
 
     }
 
@@ -432,7 +429,7 @@ int main(int argc, char* argv[])
         particle_boxes[i] = new cShapeBox(PARTICLE_BOX, PARTICLE_BOX, PARTICLE_BOX_HEIGHT, select_material[i]);
         particle_boxes[i]->setLocalRot(rot1);
         world->addChild(particle_boxes[i]);
-        particle_boxes[i]->setLocalPos(0.0,-0.25,0.25-i*0.25);
+        particle_boxes[i]->setLocalPos(0.0,0.45,0.25-i*0.25);
     }
 
     /*
@@ -611,34 +608,66 @@ void updateGraphics(void)
     // update position of label
     labelHapticRate->setLocalPos((int)(0.5 * (windowW - labelHapticRate->getWidth())), 15);
 
-    //cVector3d chosen_atom_loc = chosen_atom->getGlobalPos();
+    // Set text and position of atom number label
     atom_num->setString("8");
-    atom_num->setLocalPos((int)(0.089 * (windowW - atom_num->getWidth())),(int)(0.93 * (windowH - atom_num->getHeight())));
+    atom_num->setLocalPos((int)(0.089 * (windowW - atom_num->getWidth())),
+                          (int)(0.93 * (windowH - atom_num->getHeight())));
 
+    // Set text and position of element symbol label
     atom_label->setString("O");
-    atom_label->setLocalPos((int)(0.11 * (windowW - atom_label->getWidth())),(int)(0.91 * (windowH - atom_label->getHeight())));
+    atom_label->setLocalPos((int)(0.11 * (windowW - atom_label->getWidth())),
+                            (int)(0.91 * (windowH - atom_label->getHeight())));
 
+    // Set text and position of element name label
     atom_name->setString("Syre");
-    atom_name->setLocalPos((int)(0.08 * (windowW - atom_name->getWidth())),(int)(0.81 * (windowH - atom_name->getHeight())));
+    atom_name->setLocalPos((int)(0.08 * (windowW - atom_name->getWidth())),
+                           (int)(0.81 * (windowH - atom_name->getHeight())));
 
-    particle_labels[0]->setString("e-");
-    particle_labels[1]->setString("p+");
-    particle_labels[2]->setString("n");
-    particle_labels[0]->setLocalPos((int)(0.39 * (windowW - particle_labels[0]->getWidth())),(int)(0.835 * (windowH - particle_labels[0]->getHeight())));
-    particle_labels[1]->setLocalPos((int)(0.39 * (windowW - particle_labels[1]->getWidth())),(int)(0.520 * (windowH - particle_labels[1]->getHeight())));
-    particle_labels[2]->setLocalPos((int)(0.39 * (windowW - particle_labels[2]->getWidth())),(int)(0.190 * (windowH - particle_labels[2]->getHeight())));
+    // Set text and posistion of particle labels
+    particle_labels[ELECTRON]->setString("e-");
+    particle_labels[PROTON]->setString("p+");
+    particle_labels[NEUTRON]->setString("n");
+    particle_labels[ELECTRON]->setLocalPos((int)(0.95 * (windowW - particle_labels[0]->getWidth())),
+                                           (int)(0.835 * (windowH - particle_labels[0]->getHeight())));
+    particle_labels[PROTON]->setLocalPos((int)(0.95 * (windowW - particle_labels[1]->getWidth())),
+                                         (int)(0.520 * (windowH - particle_labels[1]->getHeight())));
+    particle_labels[NEUTRON]->setLocalPos((int)(0.95 * (windowW - particle_labels[2]->getWidth())),
+                                          (int)(0.190 * (windowH - particle_labels[2]->getHeight())));
 
+    // Check if button is pressed
     bool buttonStatus;
     hapticDevice->getUserSwitch(0, buttonStatus);
     if (buttonStatus) {
-        // Check collision and set color
-        for (int i = 0; i < NUM_PARTICLE_TYPE; i++) {
-            // If collision -> set colors
-            selected_particle->setMaterial(select_material[0]);
-            selected_particle->setShowEnabled(true,true);
+
+        // If user is holding the button, don't change color
+        if (!selected_particle->getShowEnabled()) {
+            // Get cursor position
+            cVector3d tool_pos;
+            tool_pos = tool->getDeviceLocalPos();
+            for (int i = 0; i < NUM_PARTICLE_TYPE; i++) {
+
+                // Get box position
+                cVector3d boxPos = particle_boxes[i]->getLocalPos();
+                double box_x_max = boxPos.x() + PARTICLE_BOX*2; // Let user pick in air
+                double box_x_min = boxPos.x() - PARTICLE_BOX*2;
+                double box_y_max = boxPos.y() + PARTICLE_BOX/2;
+                double box_y_min = boxPos.y() - PARTICLE_BOX/2;
+                double box_z_max = boxPos.z() + PARTICLE_BOX/2;
+                double box_z_min = boxPos.z() - PARTICLE_BOX/2;
+
+                // If collision -> set colors
+                if (tool_pos.x() <= box_x_max && tool_pos.x() >= box_x_min &&
+                    tool_pos.y() <= box_y_max && tool_pos.y() >= box_y_min &&
+                    tool_pos.z() <= box_z_max && tool_pos.z() >= box_z_min) {
+                    selected_particle->setMaterial(select_material[i]);
+                    selected_particle->setShowEnabled(true,true);
+                    is_selected = i;
+                }
+            }
         }
     } else {
         selected_particle->setShowEnabled(false,false);
+        is_selected = -1;
     }
 
 
@@ -678,11 +707,10 @@ void updateHaptics(void)
     // main haptic simulation loop
     while(simulationRunning)
     {
+
         /////////////////////////////////////////////////////////////////////////
         // HAPTIC RENDERING
         /////////////////////////////////////////////////////////////////////////
-
-
 
         // update frequency counter
         frequencyCounter.signal(1);
@@ -698,52 +726,92 @@ void updateHaptics(void)
 
         // update selected particle to cursor
         cVector3d proxy_pos, tool_pos;
-        //hapticDevice->getPosition(tool_pos);
         tool_pos = tool->getDeviceLocalPos();
         proxy_pos.x(tool_pos.x() - SELECTED_PARTICLE_RADIUS);
         proxy_pos.y(tool_pos.y() - SELECTED_PARTICLE_RADIUS);
         proxy_pos.z(tool_pos.z() + SELECTED_PARTICLE_RADIUS);
         selected_particle->setLocalPos(proxy_pos);
 
+        cVector3d x_vector(0, 0, 0);
+        x_vector.x(proxy_pos.x());
+
+        cVector3d temp_vector = proxy_pos - x_vector;
+        cVector3d unit_vector = temp_vector;
+        unit_vector.normalize();
+
+        cVector3d force(0, 0, 0);
+        // If user has picked up a electron, set magnetical effect around shell
+        if (ELECTRON == is_selected) {
+
+            for (int i = 0; i < NUM_SHELLS; i++) {
+            // If we are within the force field
+                if(temp_vector.length() < (TORUS_OUTER + 0.05 + 0.1*i) &&
+                   temp_vector.length() > (TORUS_OUTER - 0.05 + 0.1*i) &&
+                   proxy_pos.x() < 0.01) {
+                    // If we are close to the center of the torus
+                    if (temp_vector.length() < (TORUS_OUTER + 0.01 + 0.1*i) &&
+                        temp_vector.length() > (TORUS_OUTER - 0.01 + 0.1*i)) {
+                        force.x(0);
+                        force.y(0);
+                        force.z(0);
+                    }
+                    else {
+                        if (temp_vector.length() > (TORUS_OUTER - 0.05 + 0.1*i) &&
+                            temp_vector.length() <= (TORUS_OUTER - 0.01 + 0.1*i)) {
+                            force = unit_vector * 30 * temp_vector.length();
+                        } else {
+                            force = -unit_vector * 30 * temp_vector.length();
+                        }
+                        break;
+                    }
+                } else {
+                    force.x(0);
+                    force.y(0);
+                    force.z(0);
+                }
+            }
+        }
+
         // send forces to haptic device
+        tool->getHapticDevice()->setForce(force);
         //tool->applyForces();
 
         // retrieve and update the force that is applied on each object
 
         // stop the simulation clock
-        simClock.stop();
+//        simClock.stop();
 
         // read the time increment in seconds
-        double timeInterval = simClock.getCurrentTimeSeconds();
+//        double timeInterval = simClock.getCurrentTimeSeconds();
 
-        // restart the simulation clock
-        simClock.reset();
-        simClock.start();
+//        // restart the simulation clock
+//        simClock.reset();
+//        simClock.start();
 
         // temp variable to compute rotational acceleration
-        cVector3d rotAcc(0,0,0);
+//        cVector3d rotAcc(0,0,0);
 
 
-        // update rotational velocity
-        rotVel.add(timeInterval * rotAcc);
+//        // update rotational velocity
+//        rotVel.add(timeInterval * rotAcc);
 
-        // set a threshold on the rotational velocity term
-        const double ROT_VEL_MAX = 10.0;
-        double velMag = rotVel.length();
-        if (velMag > ROT_VEL_MAX)
-        {
-            rotVel.mul(ROT_VEL_MAX / velMag);
-        }
+//        // set a threshold on the rotational velocity term
+//        const double ROT_VEL_MAX = 10.0;
+//        double velMag = rotVel.length();
+//        if (velMag > ROT_VEL_MAX)
+//        {
+//            rotVel.mul(ROT_VEL_MAX / velMag);
+//        }
 
-        // add some damping too
-        const double DAMPING_GAIN = 0.1;
-        rotVel.mul(1.0 - DAMPING_GAIN * timeInterval);
+//        // add some damping too
+//        const double DAMPING_GAIN = 0.1;
+//        rotVel.mul(1.0 - DAMPING_GAIN * timeInterval);
 
-        // if user switch is pressed, set velocity to zero
-        if (tool->getUserSwitch(0) == 1)
-        {
-            rotVel.zero();
-        }
+//        // if user switch is pressed, set velocity to zero
+//        if (tool->getUserSwitch(0) == 1)
+//        {
+//            rotVel.zero();
+//        }
     }
 
     // exit haptics thread
