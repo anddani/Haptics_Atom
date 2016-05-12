@@ -57,14 +57,6 @@ using namespace std;
 //------------------------------------------------------------------------------
 // GENERAL SETTINGS
 //------------------------------------------------------------------------------
-
-// stereo Mode
-/*
-    C_STEREO_DISABLED:            Stereo is disabled
-    C_STEREO_ACTIVE:              Active stereo for OpenGL NVDIA QUADRO cards
-    C_STEREO_PASSIVE_LEFT_RIGHT:  Passive stereo where L/R images are rendered next to each other
-    C_STEREO_PASSIVE_TOP_BOTTOM:  Passive stereo where L/R images are rendered above each other
-*/
 cStereoMode stereoMode = C_STEREO_DISABLED;
 
 // fullscreen mode
@@ -292,7 +284,6 @@ int main(int argc, char* argv[])
 
     // set the near and far clipping planes of the camera
     // anything in front/behind these clipping planes will not be rendered
-    //camera->setClippingPlanes(0.01, 100);
     camera->setClippingPlanes(0.01, 10.0);
 
     // Set orthogonalic view
@@ -783,44 +774,6 @@ void updateHaptics(void)
 
         // send forces to haptic device
         tool->getHapticDevice()->setForce(force);
-        //tool->applyForces();
-
-        // retrieve and update the force that is applied on each object
-
-        // stop the simulation clock
-//        simClock.stop();
-
-        // read the time increment in seconds
-//        double timeInterval = simClock.getCurrentTimeSeconds();
-
-//        // restart the simulation clock
-//        simClock.reset();
-//        simClock.start();
-
-        // temp variable to compute rotational acceleration
-//        cVector3d rotAcc(0,0,0);
-
-
-//        // update rotational velocity
-//        rotVel.add(timeInterval * rotAcc);
-
-//        // set a threshold on the rotational velocity term
-//        const double ROT_VEL_MAX = 10.0;
-//        double velMag = rotVel.length();
-//        if (velMag > ROT_VEL_MAX)
-//        {
-//            rotVel.mul(ROT_VEL_MAX / velMag);
-//        }
-
-//        // add some damping too
-//        const double DAMPING_GAIN = 0.1;
-//        rotVel.mul(1.0 - DAMPING_GAIN * timeInterval);
-
-//        // if user switch is pressed, set velocity to zero
-//        if (tool->getUserSwitch(0) == 1)
-//        {
-//            rotVel.zero();
-//        }
     }
 
     // exit haptics thread
