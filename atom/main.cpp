@@ -82,7 +82,6 @@ const int ELECTRON = 0;
 const int PROTON = 1;
 const int NEUTRON = 2;
 
-
 //------------------------------------------------------------------------------
 // DECLARED VARIABLES
 //------------------------------------------------------------------------------
@@ -150,6 +149,11 @@ int is_selected = -1;
 
 // Selected_particle material
 cMaterialPtr select_material[NUM_PARTICLE_TYPE];
+
+// The current atom
+int current_atom_num = 8;
+string current_atom_symbol = "O";
+string current_atom_name = "Oxygen";
 
 //------------------------------------------------------------------------------
 // DECLARED MACROS
@@ -454,7 +458,7 @@ int main(int argc, char* argv[])
 
     // create a font
     cFont *font = NEW_CFONTCALIBRI20();
-    cFont *font_name = NEW_CFONTCALIBRI28();
+    cFont *font_name = NEW_CFONTCALIBRI22();
     cFont *font_label = NEW_CFONTCALIBRI72();
 
     // create a label to display the haptic rate of the simulation
@@ -600,17 +604,17 @@ void updateGraphics(void)
     labelHapticRate->setLocalPos((int)(0.5 * (windowW - labelHapticRate->getWidth())), 15);
 
     // Set text and position of atom number label
-    atom_num->setString("8");
+    atom_num->setString(to_string(current_atom_num));
     atom_num->setLocalPos((int)(0.089 * (windowW - atom_num->getWidth())),
                           (int)(0.93 * (windowH - atom_num->getHeight())));
 
     // Set text and position of element symbol label
-    atom_label->setString("O");
+    atom_label->setString(current_atom_symbol);
     atom_label->setLocalPos((int)(0.11 * (windowW - atom_label->getWidth())),
                             (int)(0.91 * (windowH - atom_label->getHeight())));
 
     // Set text and position of element name label
-    atom_name->setString("Syre");
+    atom_name->setString(current_atom_name);
     atom_name->setLocalPos((int)(0.08 * (windowW - atom_name->getWidth())),
                            (int)(0.81 * (windowH - atom_name->getHeight())));
 
@@ -639,7 +643,7 @@ void updateGraphics(void)
 
                 // Get box position
                 cVector3d boxPos = particle_boxes[i]->getLocalPos();
-                double box_x_max = boxPos.x() + PARTICLE_BOX*2; // Let user pick in air
+                double box_x_max = boxPos.x() + PARTICLE_BOX*2; // Let user pick above box
                 double box_x_min = boxPos.x() - PARTICLE_BOX*2;
                 double box_y_max = boxPos.y() + PARTICLE_BOX/2;
                 double box_y_min = boxPos.y() - PARTICLE_BOX/2;
@@ -768,7 +772,10 @@ void updateHaptics(void)
                 }
                 if (proxy_pos.x() < 0.05) {
                     force.x(10);
+                } else if (proxy_pos.x() > 0.06) {
+                    force.x(-10);
                 }
+
             }
         }
 
