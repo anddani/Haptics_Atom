@@ -84,6 +84,9 @@ const float PARTICLE_BOX_HEIGHT = 0.03;
 
 const float SELECTED_PARTICLE_RADIUS = 0.01;
 
+const int NUM_SHELLS = 2;
+const int NUM_PARTICLE_TYPE = 3;
+
 
 //------------------------------------------------------------------------------
 // DECLARED VARIABLES
@@ -137,20 +140,20 @@ string resourceRoot;
 int collisionTreeDisplayLevel = 0;
 
 // Atom nucleus
-cShapeTorus* shells[2];
+cShapeTorus* shells[NUM_SHELLS];
 cShapeCylinder* nucleus;
-cShapeBox* particle_boxes[3];
+cShapeBox* particle_boxes[NUM_PARTICLE_TYPE];
 cShapeBox* chosen_atom;
 cLabel* atom_num;
 cLabel* atom_label;
 cLabel* atom_name;
-cLabel* particle_labels[3];
+cLabel* particle_labels[NUM_PARTICLE_TYPE];
 
 // Selected atom particle
 cShapeSphere* selected_particle;
 
 // Selected_particle material
-cMaterialPtr select_material[3];
+cMaterialPtr select_material[NUM_PARTICLE_TYPE];
 
 //------------------------------------------------------------------------------
 // DECLARED MACROS
@@ -385,7 +388,7 @@ int main(int argc, char* argv[])
     /*
      * Selected particle materials
      */
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < NUM_PARTICLE_TYPE; i++) {
         select_material[i] = cMaterialPtr(new cMaterial());
     }
     select_material[0]->setBlue();
@@ -409,22 +412,23 @@ int main(int argc, char* argv[])
     /*
      * Shell toruses
      */
-    cMaterialPtr torus_mat;
-    cMaterial* c_torus = new cMaterial();
-    c_torus->setBlack();
-    torus_mat = cMaterialPtr(c_torus);
-    // Shell 1
-    shells[0] = new cShapeTorus(TORUS_INNER, TORUS_OUTER, torus_mat);
-    shells[0]->setLocalRot(rot);
-    world->addChild(shells[0]);
-    // Shell 2
-    shells[1] = new cShapeTorus(TORUS_INNER, TORUS_OUTER+0.1, torus_mat);
-    shells[1]->setLocalRot(rot);
-    world->addChild(shells[1]);
-    shells[0]->setLocalPos(0.0,0.2,0.0);
-    shells[1]->setLocalPos(0.0,0.2,0.0);
+    cMaterialPtr torus_mat = cMaterialPtr(new cMaterial());
+    torus_mat->setBlack();
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < NUM_SHELLS; i++) {
+        shells[i] = new cShapeTorus(TORUS_INNER, TORUS_OUTER + i*0.1, torus_mat);
+        shells[i]->setLocalRot(rot);
+        world->addChild(shells[i]);
+
+        shells[i]->setLocalPos(0.0,0.2,0.0);
+
+
+    }
+
+    /*
+     * Electron, Proton and Neutron particle boxes
+     */
+    for (int i = 0; i < NUM_PARTICLE_TYPE; i++) {
         particle_boxes[i] = new cShapeBox(PARTICLE_BOX, PARTICLE_BOX, PARTICLE_BOX_HEIGHT, select_material[i]);
         particle_boxes[i]->setLocalRot(rot1);
         world->addChild(particle_boxes[i]);
@@ -492,7 +496,7 @@ int main(int argc, char* argv[])
     atom_name->m_fontColor.setBlack();
     camera->m_frontLayer->addChild(atom_name);
 
-    for (int i = 0; i < 3; i++){
+    for (int i = 0; i < NUM_PARTICLE_TYPE; i++){
         particle_labels[i] = new cLabel(font_name);
         particle_labels[i]->m_fontColor.setBlack();
         camera->m_frontLayer->addChild(particle_labels[i]);
@@ -628,7 +632,7 @@ void updateGraphics(void)
     hapticDevice->getUserSwitch(0, buttonStatus);
     if (buttonStatus) {
         // Check collision and set color
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < NUM_PARTICLE_TYPE; i++) {
             // If collision -> set colors
             selected_particle->setMaterial(select_material[0]);
             selected_particle->setShowEnabled(true,true);
