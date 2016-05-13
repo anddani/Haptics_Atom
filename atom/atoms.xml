@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+	<atom>
+		<num>1</num>
+		<symbol>H</symbol>
+		<name>Hydrogen</name>
+	</atom>
+	<atom>
+		<num>2</num>
+		<symbol>He</symbol>
+		<name>Helium</name>
+	</atom>
+	<atom>
+		<num>3</num>
+		<symbol>Li</symbol>
+		<name>Lithium</name>
+	</atom>
+	<atom>
+		<num>4</num>
+		<symbol>Be</symbol>
+		<name>Beryllium</name>
+	</atom>
+	<atom>
+		<num>5</num>
+		<symbol>B</symbol>
+		<name>Boron</name>
+	</atom>
+	<atom>
+		<num>6</num>
+		<symbol>C</symbol>
+		<name>Carbon</name>
+	</atom>
+	<atom>
+		<num>7</num>
+		<symbol>N</symbol>
+		<name>Nitrogen</name>
+	</atom>
+	<atom>
+		<num>8</num>
+		<symbol>O</symbol>
+		<name>Oxygen</name>
+	</atom>
+</root> 
+

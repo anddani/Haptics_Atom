@@ -45,8 +45,10 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = main.cpp 
-OBJECTS       = main.o
+SOURCES       = main.cpp \
+		tinyxml2.cpp 
+OBJECTS       = main.o \
+		tinyxml2.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/shell-unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
@@ -583,8 +585,12 @@ main.o: main.cpp ../chai3d-3.0.0/src/chai3d.h \
 		../../../../../../../../../../nada.kth.se/home/u/u1avzhxu/public/chai3d-3.0.0/src/resources/CFontCalibri36.h \
 		../../../../../../../../../../nada.kth.se/home/u/u1avzhxu/public/chai3d-3.0.0/src/resources/CFontCalibri40.h \
 		../../../../../../../../../../nada.kth.se/home/u/u1avzhxu/public/chai3d-3.0.0/src/resources/CFontCalibri72.h \
-		../../../../../../../../../../nada.kth.se/home/u/u1avzhxu/public/chai3d-3.0.0/src/resources/CFontCalibri144.h
+		../../../../../../../../../../nada.kth.se/home/u/u1avzhxu/public/chai3d-3.0.0/src/resources/CFontCalibri144.h \
+		tinyxml2.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
+
+tinyxml2.o: tinyxml2.cpp tinyxml2.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o tinyxml2.o tinyxml2.cpp
 
 ####### Install
 

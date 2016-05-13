@@ -43,9 +43,11 @@
 
 //------------------------------------------------------------------------------
 #include "chai3d.h"
+#include "tinyxml2.h"
 //------------------------------------------------------------------------------
 using namespace chai3d;
 using namespace std;
+using namespace tinyxml2;
 //------------------------------------------------------------------------------
 #ifndef MACOSX
 #include "GL/glut.h"
@@ -156,9 +158,13 @@ int is_selected = -1;
 cMaterialPtr select_material[NUM_PARTICLE_TYPE];
 
 // The current atom
-int current_atom_num = 8;
-string current_atom_symbol = "O";
-string current_atom_name = "Oxygen";
+int current_atom_num;
+string current_atom_symbol;
+string current_atom_name;
+
+// XML
+XMLDocument doc;
+XMLElement* pRoot;
 
 //------------------------------------------------------------------------------
 // DECLARED MACROS
@@ -297,8 +303,6 @@ int main(int argc, char* argv[])
 
     // Set orthogonalic view
     camera->setOrthographicView(1.3);
-
-
 
     // set stereo eye separation and focal length (applies only if stereo is enabled)
     camera->setStereoEyeSeparation(0.03);
@@ -455,7 +459,18 @@ int main(int argc, char* argv[])
     selected_particle = new cShapeSphere(SELECTED_PARTICLE_RADIUS, selected_particle_mat);
     world->addChild(selected_particle);
 
+    /*
+     * XML
+     */
+    doc.LoadFile("atoms.xml");
+    pRoot = doc.FirstChildElement("root");
+    XMLElement* newAtom = pRoot->FirstChildElement("atom");
+    //XMLElement* nameElement = pRoot->FirstChildElement("atom")->FirstChildElement("name");
+    string atom_num_str = newAtom->FirstChildElement("num")->GetText();
 
+    current_atom_num = atoi(atom_num_str.c_str());
+    current_atom_symbol = newAtom->FirstChildElement("symbol")->GetText();
+    current_atom_name = newAtom->FirstChildElement("name")->GetText();
 
     //--------------------------------------------------------------------------
     // WIDGETS
@@ -538,6 +553,20 @@ void keySelect(unsigned char key, int x, int y)
 
         // exit application
         exit(0);
+    }
+
+    // option 1: Select a random atom
+    if (key == '1')
+    {
+        //TODO
+        // FIX RANDOM HERE
+        XMLElement* newAtom = pRoot->FirstChildElement("atom");
+        //XMLElement* nameElement = pRoot->FirstChildElement("atom")->FirstChildElement("name");
+        string atom_num_str = newAtom->FirstChildElement("num")->GetText();
+
+        current_atom_num = atoi(atom_num_str.c_str());
+        current_atom_symbol = newAtom->FirstChildElement("symbol")->GetText();
+        current_atom_name = newAtom->FirstChildElement("name")->GetText();
     }
 
     // option f: toggle fullscreen
@@ -735,6 +764,7 @@ void updateHaptics(void)
         cVector3d x_vector(0, 0, 0);
         x_vector.x(proxy_pos.x());
 
+        // temp_vector is on the y-z plane
         cVector3d temp_vector = proxy_pos - x_vector;
         cVector3d unit_vector = temp_vector;
         unit_vector.normalize();
@@ -746,7 +776,7 @@ void updateHaptics(void)
             // If we are within the force field
                 if(temp_vector.length() < (TORUS_OUTER + OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
                    temp_vector.length() > (TORUS_OUTER - OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
-                   proxy_pos.x() < 0.01) {
+                   proxy_pos.x() < 0.07) {
                     // If we are close to the center of the torus
                     if (temp_vector.length() < (TORUS_OUTER + INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
                         temp_vector.length() > (TORUS_OUTER - INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i)) {
@@ -762,7 +792,7 @@ void updateHaptics(void)
                             //force = unit_vector * 30 * temp_vector.length();
                             force = SPRING_CONSTANT * (unit_vector*(TORUS_OUTER - INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) - temp_vector);
                         } else {
-                            // When on the outside force field for the torus
+                            // When on the outer force field for the torus
                             //force = -unit_vector * 30 * temp_vector.length();
                             force = SPRING_CONSTANT * (unit_vector*(TORUS_OUTER + INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) - temp_vector);
                         }
@@ -782,15 +812,17 @@ void updateHaptics(void)
             }
         } else if (PROTON == is_selected || NEUTRON == is_selected) {
             // If cursor is close to the nucleus in the y-z plane, set force to centrum
-            if (temp_vector.length() < (NUCLEUS_RADIUS + 0.05)) {
+            if (temp_vector.length() < (NUCLEUS_RADIUS + 0.05) &&
+                proxy_pos.x() < 0.07) {
                 if (temp_vector.length() >= NUCLEUS_RADIUS) {
-                    //force = -50 * temp_vector;
-                    force = SPRING_CONSTANT * (unit_vector*NUCLEUS_RADIUS - temp_vector);
+                    force = SPRING_CONSTANT * (unit_vector*(NUCLEUS_RADIUS) - temp_vector);
                 }
-                if (proxy_pos.x() < 0.05) {
-                    force.x(10);
-                } else if (proxy_pos.x() > 0.06) {
-                    force.x(-10);
+                if (proxy_pos.x() < 0.03) {
+                    // Cannot push inwards
+                    force.x(SPRING_CONSTANT*(-proxy_pos.x() + 0.03));
+                } else if (proxy_pos.x() > 0.04) {
+                    // Smaller force when pulling
+                    force.x(-500*(proxy_pos.x() - 0.04));
                 }
             }
         }

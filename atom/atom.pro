@@ -3,7 +3,7 @@ CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
 
-SOURCES += main.cpp
+SOURCES += main.cpp tinyxml2.cpp
 
 INCLUDEPATH += $$PWD/../chai3d-3.0.0/src
 INCLUDEPATH += $$PWD/../chai3d-3.0.0/external/Eigen
