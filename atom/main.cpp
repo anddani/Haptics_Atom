@@ -70,6 +70,11 @@ const float NUCLEUS_HEIGHT = 0.03;
 
 const float TORUS_INNER = 0.003;
 const float TORUS_OUTER = 0.2;
+const float TORUS_DISTANCE = 0.1;
+const float INNER_FORCEFIELD_THRESHOLD = 0.001;
+const float OUTER_FORCEFIELD_THRESHOLD = 0.05;
+
+const float SPRING_CONSTANT = 2000;
 
 const float PARTICLE_BOX = 0.17;
 const float PARTICLE_BOX_HEIGHT = 0.03;
@@ -409,7 +414,7 @@ int main(int argc, char* argv[])
     torus_mat->setBlack();
 
     for (int i = 0; i < NUM_SHELLS; i++) {
-        shells[i] = new cShapeTorus(TORUS_INNER, TORUS_OUTER + i*0.1, torus_mat);
+        shells[i] = new cShapeTorus(TORUS_INNER, TORUS_OUTER + i*TORUS_DISTANCE, torus_mat);
         shells[i]->setLocalRot(rot);
         world->addChild(shells[i]);
 
@@ -739,22 +744,27 @@ void updateHaptics(void)
 
             for (int i = 0; i < NUM_SHELLS; i++) {
             // If we are within the force field
-                if(temp_vector.length() < (TORUS_OUTER + 0.05 + 0.1*i) &&
-                   temp_vector.length() > (TORUS_OUTER - 0.05 + 0.1*i) &&
+                if(temp_vector.length() < (TORUS_OUTER + OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
+                   temp_vector.length() > (TORUS_OUTER - OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
                    proxy_pos.x() < 0.01) {
                     // If we are close to the center of the torus
-                    if (temp_vector.length() < (TORUS_OUTER + 0.01 + 0.1*i) &&
-                        temp_vector.length() > (TORUS_OUTER - 0.01 + 0.1*i)) {
+                    if (temp_vector.length() < (TORUS_OUTER + INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
+                        temp_vector.length() > (TORUS_OUTER - INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i)) {
                         force.x(0);
                         force.y(0);
                         force.z(0);
                     }
                     else {
-                        if (temp_vector.length() > (TORUS_OUTER - 0.05 + 0.1*i) &&
-                            temp_vector.length() <= (TORUS_OUTER - 0.01 + 0.1*i)) {
-                            force = unit_vector * 30 * temp_vector.length();
+                        // We are either inside the inner or outer force field
+                        if (temp_vector.length() > (TORUS_OUTER - OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
+                            temp_vector.length() <= (TORUS_OUTER - INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i)) {
+                            // When on the inside force field for the torus
+                            //force = unit_vector * 30 * temp_vector.length();
+                            force = SPRING_CONSTANT * (unit_vector*(TORUS_OUTER - INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) - temp_vector);
                         } else {
-                            force = -unit_vector * 30 * temp_vector.length();
+                            // When on the outside force field for the torus
+                            //force = -unit_vector * 30 * temp_vector.length();
+                            force = SPRING_CONSTANT * (unit_vector*(TORUS_OUTER + INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) - temp_vector);
                         }
                         break;
                     }
@@ -764,18 +774,24 @@ void updateHaptics(void)
                     force.z(0);
                 }
             }
+
+            // Prevent the user place an electron in the nucleus
+            if (temp_vector.length() <= NUCLEUS_RADIUS) {
+                // force = stiffness konstant * distance into the nucleus
+                force = SPRING_CONSTANT * (unit_vector*NUCLEUS_RADIUS - temp_vector);
+            }
         } else if (PROTON == is_selected || NEUTRON == is_selected) {
             // If cursor is close to the nucleus in the y-z plane, set force to centrum
             if (temp_vector.length() < (NUCLEUS_RADIUS + 0.05)) {
                 if (temp_vector.length() >= NUCLEUS_RADIUS) {
-                    force = -unit_vector * 50 * temp_vector.length();
+                    //force = -50 * temp_vector;
+                    force = SPRING_CONSTANT * (unit_vector*NUCLEUS_RADIUS - temp_vector);
                 }
                 if (proxy_pos.x() < 0.05) {
                     force.x(10);
                 } else if (proxy_pos.x() > 0.06) {
                     force.x(-10);
                 }
-
             }
         }
 
