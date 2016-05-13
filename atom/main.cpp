@@ -42,6 +42,7 @@
 //==============================================================================
 
 //------------------------------------------------------------------------------
+#include <vector>
 #include "chai3d.h"
 #include "tinyxml2.h"
 //------------------------------------------------------------------------------
@@ -149,10 +150,12 @@ cLabel* atom_num;
 cLabel* atom_label;
 cLabel* atom_name;
 cLabel* particle_labels[NUM_PARTICLE_TYPE];
+vector<cShapeSphere*> placed_atoms;
 
 // Selected atom particle
 cShapeSphere* selected_particle;
 int is_selected = -1;
+int in_ok_position = -1;
 
 // Selected_particle material
 cMaterialPtr select_material[NUM_PARTICLE_TYPE];
@@ -695,6 +698,19 @@ void updateGraphics(void)
             }
         }
     } else {
+        // If user released the button with a selected particle
+        if (in_ok_position > -1) {
+            cShapeSphere* placed_atom = selected_particle->copy();
+            world->addChild(placed_atom);
+            placed_atoms.push_back(placed_atom);
+        }
+        if (ELECTRON == in_ok_position) {
+            cout << "ELECTRON in ok position!" << endl;
+            in_ok_position = -1;
+        } else if (PROTON == in_ok_position || NEUTRON == in_ok_position) {
+            cout << "PROTON/NEUTRON in ok position!" << endl;
+            in_ok_position = -1;
+        }
         selected_particle->setShowEnabled(false,false);
         is_selected = -1;
     }
@@ -777,6 +793,7 @@ void updateHaptics(void)
                 if(temp_vector.length() < (TORUS_OUTER + OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
                    temp_vector.length() > (TORUS_OUTER - OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
                    proxy_pos.x() < 0.07) {
+                    in_ok_position = ELECTRON;
                     // If we are close to the center of the torus
                     if (temp_vector.length() < (TORUS_OUTER + INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
                         temp_vector.length() > (TORUS_OUTER - INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i)) {
@@ -799,6 +816,7 @@ void updateHaptics(void)
                         break;
                     }
                 } else {
+                    in_ok_position = -1;
                     force.x(0);
                     force.y(0);
                     force.z(0);
@@ -814,6 +832,7 @@ void updateHaptics(void)
             // If cursor is close to the nucleus in the y-z plane, set force to centrum
             if (temp_vector.length() < (NUCLEUS_RADIUS + 0.05) &&
                 proxy_pos.x() < 0.07) {
+                in_ok_position = PROTON;
                 if (temp_vector.length() >= NUCLEUS_RADIUS) {
                     force = SPRING_CONSTANT * (unit_vector*(NUCLEUS_RADIUS) - temp_vector);
                 }
@@ -824,9 +843,10 @@ void updateHaptics(void)
                     // Smaller force when pulling
                     force.x(-500*(proxy_pos.x() - 0.04));
                 }
+            } else {
+                in_ok_position = -1;
             }
         }
-
         // send forces to haptic device
         tool->getHapticDevice()->setForce(force);
     }
