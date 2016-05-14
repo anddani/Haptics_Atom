@@ -44,6 +44,7 @@
 //------------------------------------------------------------------------------
 #include <vector>
 #include <time.h>
+#include <ctime>
 #include "chai3d.h"
 #include "tinyxml2.h"
 //------------------------------------------------------------------------------
@@ -92,6 +93,8 @@ const int PROTON = 1;
 const int NEUTRON = 2;
 
 const int NUM_ATOMS = 8;
+
+const double CLEAR_SCREEN_TIMEOUT = 0.1;
 
 //------------------------------------------------------------------------------
 // DECLARED VARIABLES
@@ -174,6 +177,9 @@ XMLElement* pRoot;
 
 // Game rules
 int particles_left[NUM_PARTICLE_TYPE];
+cLabel* clear_screen;
+bool show_clear_screen = false;
+clock_t timeout_start;
 
 //------------------------------------------------------------------------------
 // DECLARED MACROS
@@ -243,7 +249,6 @@ int main(int argc, char* argv[])
     cout << "[f] - Enable/Disable full screen mode" << endl;
     cout << "[x] - Exit application" << endl;
     cout << endl << endl;
-    cout << "selected: " << is_selected << endl;
 
     // parse first arg to try and locate resources
     resourceRoot = string(argv[0]).substr(0,string(argv[0]).find_last_of("/\\")+1);
@@ -477,7 +482,7 @@ int main(int argc, char* argv[])
      * XML
      */
     getNewAtom(1);
-    getNewAtom(4);
+    //getNewAtom(4);
 
     //--------------------------------------------------------------------------
     // WIDGETS
@@ -520,6 +525,10 @@ int main(int argc, char* argv[])
         particle_labels[i]->m_fontColor.setBlack();
         camera->m_frontLayer->addChild(particle_labels[i]);
     }
+
+    clear_screen = new cLabel(font_label);
+    clear_screen->m_fontColor.setBlack();
+    clear_screen->setString("CLEAR");
 
     //--------------------------------------------------------------------------
     // START SIMULATION
@@ -670,6 +679,31 @@ void graphicsTimer(int data)
 void updateGraphics(void)
 {
     /////////////////////////////////////////////////////////////////////
+    // CHECK GAME STATUS
+    /////////////////////////////////////////////////////////////////////
+
+    if (particles_left[ELECTRON] == 0 &&
+        particles_left[PROTON] == 0 &&
+        particles_left[NEUTRON] == 0) {
+        // Display game over screen
+        camera->m_frontLayer->addChild(clear_screen);
+        // Set timeout
+        timeout_start = clock();
+
+        show_clear_screen = true;
+        // Reset screen
+        resetScreen();
+
+        // Get new random atom
+        getNewAtom(rand() % NUM_ATOMS + 1);
+    }
+    // If timeout
+    if (show_clear_screen && ((clock() - timeout_start)/(double)CLOCKS_PER_SEC) > CLEAR_SCREEN_TIMEOUT) {
+        show_clear_screen = false;
+        camera->m_frontLayer->removeChild(clear_screen);
+    }
+
+    /////////////////////////////////////////////////////////////////////
     // UPDATE WIDGETS
     /////////////////////////////////////////////////////////////////////
 
@@ -799,8 +833,6 @@ enum cMode
 
 void updateHaptics(void)
 {
-    // simulation clock
-    cPrecisionClock simClock;
 
     // simulation in now running
     simulationRunning  = true;
@@ -846,9 +878,6 @@ void updateHaptics(void)
         if (ELECTRON == is_selected) { // If user has picked up a electron, set magnetical effect around shell
 
             for (int i = 0; i < NUM_SHELLS; i++) {
-                // If we are within the force field
-                cout << "placed: " << current_atom_num - particles_left[ELECTRON] << " i: " << i << endl;
-
                 // Set force field depending on the number of electrons placed
                 if (current_atom_num - particles_left[ELECTRON] < 2 && i > 0) {
                     continue;
@@ -856,7 +885,7 @@ void updateHaptics(void)
                 if (current_atom_num - particles_left[ELECTRON] >= 2 && i == 0) {
                     continue;
                 }
-
+                // If we are within the force field
                 if(temp_vector.length() < (TORUS_OUTER + OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
                    temp_vector.length() > (TORUS_OUTER - OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
                    proxy_pos.x() < 0.07) {
@@ -868,11 +897,9 @@ void updateHaptics(void)
                         if (temp_vector.length() > (TORUS_OUTER - OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
                             temp_vector.length() <= (TORUS_OUTER - INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i)) {
                             // When on the inside force field for the torus
-                            //force = unit_vector * 30 * temp_vector.length();
                             force = SPRING_CONSTANT * (unit_vector*(TORUS_OUTER - INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) - temp_vector);
                         } else {
                             // When on the outer force field for the torus
-                            //force = -unit_vector * 30 * temp_vector.length();
                             force = SPRING_CONSTANT * (unit_vector*(TORUS_OUTER + INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) - temp_vector);
                         }
                     }
@@ -884,7 +911,7 @@ void updateHaptics(void)
 
             // Prevent the user place an electron in the nucleus
             if (temp_vector.length() <= NUCLEUS_RADIUS) {
-                // force = stiffness konstant * distance into the nucleus
+                // force = stiffness constant * distance into the nucleus
                 force = SPRING_CONSTANT * (unit_vector*NUCLEUS_RADIUS - temp_vector);
             }
         } else if (PROTON == is_selected || NEUTRON == is_selected) {
