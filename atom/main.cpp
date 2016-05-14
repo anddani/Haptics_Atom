@@ -584,6 +584,11 @@ void getNewAtom(int num) {
     for (int i = 0; i < NUM_PARTICLE_TYPE; i++) {
         particles_left[i] = current_atom_num;
     }
+
+    // Special case for hydrogen
+    if (current_atom_num == 1) {
+        particles_left[NEUTRON] = 0;
+    }
 }
 
 //------------------------------------------------------------------------------
