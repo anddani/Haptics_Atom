@@ -400,7 +400,6 @@ int main(int argc, char* argv[])
     select_material[PROTON]->setOrangeRed();
     select_material[NEUTRON]->setGray();
 
-
     /*
      * Nucleus cylinder
      */
@@ -450,7 +449,6 @@ int main(int argc, char* argv[])
     chosen_atom->setLocalRot(rot1);
     world->addChild(chosen_atom);
     chosen_atom->setLocalPos(0.0,-0.48,0.28);
-
 
     /*
      * Selected particle sphere
@@ -794,14 +792,10 @@ void updateHaptics(void)
                    temp_vector.length() > (TORUS_OUTER - OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
                    proxy_pos.x() < 0.07) {
                     in_ok_position = ELECTRON;
+                    //cout << "IN RANGE, i: " << i << " x : " << proxy_pos.x() << " cursor length: " << temp_vector.length() << " inner forcefield: " << (TORUS_OUTER - OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) << " outer forcefield: " << (TORUS_OUTER + OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) << endl;
                     // If we are close to the center of the torus
-                    if (temp_vector.length() < (TORUS_OUTER + INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
-                        temp_vector.length() > (TORUS_OUTER - INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i)) {
-                        force.x(0);
-                        force.y(0);
-                        force.z(0);
-                    }
-                    else {
+                    if (temp_vector.length() >= (TORUS_OUTER + INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) ||
+                        temp_vector.length() <= (TORUS_OUTER - INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i)) {
                         // We are either inside the inner or outer force field
                         if (temp_vector.length() > (TORUS_OUTER - OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
                             temp_vector.length() <= (TORUS_OUTER - INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i)) {
@@ -813,13 +807,11 @@ void updateHaptics(void)
                             //force = -unit_vector * 30 * temp_vector.length();
                             force = SPRING_CONSTANT * (unit_vector*(TORUS_OUTER + INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) - temp_vector);
                         }
-                        break;
                     }
+                    break;
                 } else {
+                    //cout << "NOT IN RANGE, i: " << i << " x : " << proxy_pos.x() << " cursor length: " << temp_vector.length() << " inner forcefield: " << (TORUS_OUTER - OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) << " outer forcefield: " << (TORUS_OUTER + OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) << endl;
                     in_ok_position = -1;
-                    force.x(0);
-                    force.y(0);
-                    force.z(0);
                 }
             }
 
