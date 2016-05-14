@@ -43,6 +43,7 @@
 
 //------------------------------------------------------------------------------
 #include <vector>
+#include <time.h>
 #include "chai3d.h"
 #include "tinyxml2.h"
 //------------------------------------------------------------------------------
@@ -89,6 +90,8 @@ const int NUM_PARTICLE_TYPE = 3;
 const int ELECTRON = 0;
 const int PROTON = 1;
 const int NEUTRON = 2;
+
+const int NUM_ATOMS = 8;
 
 //------------------------------------------------------------------------------
 // DECLARED VARIABLES
@@ -169,6 +172,9 @@ string current_atom_name;
 XMLDocument doc;
 XMLElement* pRoot;
 
+// Game rules
+int particles_left[NUM_PARTICLE_TYPE];
+
 //------------------------------------------------------------------------------
 // DECLARED MACROS
 //------------------------------------------------------------------------------
@@ -198,6 +204,11 @@ void close(void);
 // main haptics simulation loop
 void updateHaptics(void);
 
+// searches for an atom with a given number and sets it as the current atom
+void getNewAtom(int);
+
+// Removes all placed particles from screen
+void resetScreen(void);
 
 //==============================================================================
 /*
@@ -236,6 +247,8 @@ int main(int argc, char* argv[])
 
     // parse first arg to try and locate resources
     resourceRoot = string(argv[0]).substr(0,string(argv[0]).find_last_of("/\\")+1);
+
+    srand(time(NULL));
 
 
     //--------------------------------------------------------------------------
@@ -463,15 +476,8 @@ int main(int argc, char* argv[])
     /*
      * XML
      */
-    doc.LoadFile("atoms.xml");
-    pRoot = doc.FirstChildElement("root");
-    XMLElement* newAtom = pRoot->FirstChildElement("atom");
-    //XMLElement* nameElement = pRoot->FirstChildElement("atom")->FirstChildElement("name");
-    string atom_num_str = newAtom->FirstChildElement("num")->GetText();
-
-    current_atom_num = atoi(atom_num_str.c_str());
-    current_atom_symbol = newAtom->FirstChildElement("symbol")->GetText();
-    current_atom_name = newAtom->FirstChildElement("name")->GetText();
+    getNewAtom(1);
+    getNewAtom(4);
 
     //--------------------------------------------------------------------------
     // WIDGETS
@@ -544,6 +550,45 @@ void resizeWindow(int w, int h)
 
 //------------------------------------------------------------------------------
 
+void getNewAtom(int num) {
+    doc.LoadFile("atoms.xml");
+    pRoot = doc.FirstChildElement("root");
+    XMLElement* newAtom = NULL;
+
+    for (XMLElement* child = pRoot->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+    {
+        string current_num = child->FirstChildElement("num")->GetText();
+        if (atoi(current_num.c_str()) == num) {
+            newAtom = child;
+            break;
+        }
+    }
+
+    if (newAtom != NULL) {
+        string atom_num_str = newAtom->FirstChildElement("num")->GetText();
+
+        current_atom_num = atoi(atom_num_str.c_str());
+        current_atom_symbol = newAtom->FirstChildElement("symbol")->GetText();
+        current_atom_name = newAtom->FirstChildElement("name")->GetText();
+    }
+    // Update game rules
+    for (int i = 0; i < NUM_PARTICLE_TYPE; i++) {
+        particles_left[i] = current_atom_num;
+    }
+}
+
+//------------------------------------------------------------------------------
+
+void resetScreen() {
+    while (!placed_atoms.empty()) {
+        world->removeChild(placed_atoms.back());
+        delete placed_atoms.back();
+        placed_atoms.pop_back();
+    }
+}
+
+//------------------------------------------------------------------------------
+
 void keySelect(unsigned char key, int x, int y)
 {
     // option ESC: exit
@@ -559,15 +604,11 @@ void keySelect(unsigned char key, int x, int y)
     // option 1: Select a random atom
     if (key == '1')
     {
-        //TODO
-        // FIX RANDOM HERE
-        XMLElement* newAtom = pRoot->FirstChildElement("atom");
-        //XMLElement* nameElement = pRoot->FirstChildElement("atom")->FirstChildElement("name");
-        string atom_num_str = newAtom->FirstChildElement("num")->GetText();
+        // Reset screen
+        resetScreen();
 
-        current_atom_num = atoi(atom_num_str.c_str());
-        current_atom_symbol = newAtom->FirstChildElement("symbol")->GetText();
-        current_atom_name = newAtom->FirstChildElement("name")->GetText();
+        // Get new random atom
+        getNewAtom(rand() % NUM_ATOMS + 1);
     }
 
     // option f: toggle fullscreen
@@ -697,16 +738,34 @@ void updateGraphics(void)
         }
     } else {
         // If user released the button with a selected particle
-        if (in_ok_position > -1) {
+        if (ELECTRON == is_selected && ELECTRON == in_ok_position && particles_left[ELECTRON] > 0) {
+            // Place it on the screen
             cShapeSphere* placed_atom = selected_particle->copy();
             world->addChild(placed_atom);
             placed_atoms.push_back(placed_atom);
-        }
-        if (ELECTRON == in_ok_position) {
-            cout << "ELECTRON in ok position!" << endl;
+
+            particles_left[ELECTRON]--;
+
             in_ok_position = -1;
-        } else if (PROTON == in_ok_position || NEUTRON == in_ok_position) {
-            cout << "PROTON/NEUTRON in ok position!" << endl;
+        }
+        if (PROTON == is_selected && PROTON == in_ok_position && particles_left[PROTON] > 0) {
+            // Place it on the screen
+            cShapeSphere* placed_atom = selected_particle->copy();
+            world->addChild(placed_atom);
+            placed_atoms.push_back(placed_atom);
+
+            particles_left[PROTON]--;
+
+            in_ok_position = -1;
+        }
+        if (NEUTRON == is_selected && PROTON == in_ok_position && particles_left[NEUTRON] > 0) {
+            // Place it on the screen
+            cShapeSphere* placed_atom = selected_particle->copy();
+            world->addChild(placed_atom);
+            placed_atoms.push_back(placed_atom);
+
+            particles_left[NEUTRON]--;
+
             in_ok_position = -1;
         }
         selected_particle->setShowEnabled(false,false);
@@ -787,12 +846,21 @@ void updateHaptics(void)
         if (ELECTRON == is_selected) { // If user has picked up a electron, set magnetical effect around shell
 
             for (int i = 0; i < NUM_SHELLS; i++) {
-            // If we are within the force field
+                // If we are within the force field
+                cout << "placed: " << current_atom_num - particles_left[ELECTRON] << " i: " << i << endl;
+
+                // Set force field depending on the number of electrons placed
+                if (current_atom_num - particles_left[ELECTRON] < 2 && i > 0) {
+                    continue;
+                }
+                if (current_atom_num - particles_left[ELECTRON] >= 2 && i == 0) {
+                    continue;
+                }
+
                 if(temp_vector.length() < (TORUS_OUTER + OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
                    temp_vector.length() > (TORUS_OUTER - OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) &&
                    proxy_pos.x() < 0.07) {
                     in_ok_position = ELECTRON;
-                    //cout << "IN RANGE, i: " << i << " x : " << proxy_pos.x() << " cursor length: " << temp_vector.length() << " inner forcefield: " << (TORUS_OUTER - OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) << " outer forcefield: " << (TORUS_OUTER + OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) << endl;
                     // If we are close to the center of the torus
                     if (temp_vector.length() >= (TORUS_OUTER + INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) ||
                         temp_vector.length() <= (TORUS_OUTER - INNER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i)) {
@@ -810,7 +878,6 @@ void updateHaptics(void)
                     }
                     break;
                 } else {
-                    //cout << "NOT IN RANGE, i: " << i << " x : " << proxy_pos.x() << " cursor length: " << temp_vector.length() << " inner forcefield: " << (TORUS_OUTER - OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) << " outer forcefield: " << (TORUS_OUTER + OUTER_FORCEFIELD_THRESHOLD + TORUS_DISTANCE*i) << endl;
                     in_ok_position = -1;
                 }
             }
