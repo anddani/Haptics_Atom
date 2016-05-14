@@ -879,6 +879,9 @@ void updateHaptics(void)
 
             for (int i = 0; i < NUM_SHELLS; i++) {
                 // Set force field depending on the number of electrons placed
+                if (particles_left[ELECTRON] == 0) {
+                    break;
+                }
                 if (current_atom_num - particles_left[ELECTRON] < 2 && i > 0) {
                     continue;
                 }
@@ -917,7 +920,9 @@ void updateHaptics(void)
         } else if (PROTON == is_selected || NEUTRON == is_selected) {
             // If cursor is close to the nucleus in the y-z plane, set force to centrum
             if (temp_vector.length() < (NUCLEUS_RADIUS + 0.05) &&
-                proxy_pos.x() < 0.07) {
+                proxy_pos.x() < 0.07 &&
+                !(PROTON == is_selected && particles_left[PROTON] == 0) &&
+                !(NEUTRON == is_selected && particles_left[NEUTRON] == 0)) {
                 in_ok_position = PROTON;
                 if (temp_vector.length() >= NUCLEUS_RADIUS) {
                     force = SPRING_CONSTANT * (unit_vector*(NUCLEUS_RADIUS) - temp_vector);
