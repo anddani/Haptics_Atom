@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE root SYSTEM "http://csc.kth.se/~anddani/DH2660/atoms.dtd">
-<root>
+<!DOCTYPE atoms SYSTEM "http://csc.kth.se/~anddani/DH2660/atoms.dtd">
+<atoms>
 	<atom>
 		<num>1</num>
 		<symbol>H</symbol>
@@ -41,5 +41,5 @@
 		<symbol>O</symbol>
 		<name>Oxygen</name>
 	</atom>
-</root> 
+</atoms> 
 

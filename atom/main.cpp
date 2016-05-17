@@ -566,7 +566,7 @@ void resizeWindow( int w, int h )
 void getNewAtom( int num )
 {
     doc.LoadFile( "atoms.xml" );
-    pRoot = doc.FirstChildElement( "root" );
+    pRoot = doc.FirstChildElement( "atoms" );
     XMLElement* newAtom = NULL;
 
     for ( XMLElement* child = pRoot->FirstChildElement(); child != NULL; child = child->NextSiblingElement() )
