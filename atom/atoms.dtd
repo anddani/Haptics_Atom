@@ -1,6 +1,6 @@
 <!ENTITY % description "num, symbol, name">
 
-<!ELEMENT root (atom+)>
+<!ELEMENT atoms (atom+)>
 <!ELEMENT atom (%description;)>
 <!ELEMENT num (#PCDATA)>
 <!ELEMENT symbol (#PCDATA)>
