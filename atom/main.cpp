@@ -760,7 +760,7 @@ void updateGraphics( void )
     // Check if button is pressed
     bool buttonStatus;
     hapticDevice->getUserSwitch( 0, buttonStatus );
-    if ( buttonStatus )
+    if ( buttonStatus && !show_clear_screen )
     {
 
         // If user is holding the button, don't change color
@@ -792,7 +792,8 @@ void updateGraphics( void )
             }
         }
     }
-    else {
+    else
+    {
         // If user released the button with a selected particle
         if ( ELECTRON == is_selected && ELECTRON == in_ok_position && particles_left[ELECTRON] > 0 )
         {
