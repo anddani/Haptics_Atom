@@ -79,7 +79,7 @@ const float TORUS_DISTANCE = 0.1;
 const float INNER_THRESHOLD = 0.001;
 const float OUTER_THRESHOLD = 0.05;
 
-const float SPRING_CONSTANT = 1000;
+const float SPRING_CONSTANT = 500;
 
 const float PARTICLE_BOX = 0.17;
 const float PARTICLE_BOX_HEIGHT = 0.03;
@@ -762,7 +762,6 @@ void updateGraphics( void )
     hapticDevice->getUserSwitch( 0, buttonStatus );
     if ( buttonStatus && !show_clear_screen )
     {
-
         // If user is holding the button, don't change color
         if ( !selected_particle->getShowEnabled() )
         {
@@ -782,8 +781,8 @@ void updateGraphics( void )
 
                 // If collision, set colors
                 if ( tool_pos.x() <= box_x_max && tool_pos.x() >= box_x_min &&
-                    tool_pos.y() <= box_y_max && tool_pos.y() >= box_y_min &&
-                    tool_pos.z() <= box_z_max && tool_pos.z() >= box_z_min )
+                     tool_pos.y() <= box_y_max && tool_pos.y() >= box_y_min &&
+                     tool_pos.z() <= box_z_max && tool_pos.z() >= box_z_min )
                 {
                     selected_particle->setMaterial( select_material[i] );
                     selected_particle->setShowEnabled( true,true );
