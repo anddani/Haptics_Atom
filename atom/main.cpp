@@ -65,7 +65,7 @@ using namespace tinyxml2;
 cStereoMode stereoMode = C_STEREO_DISABLED;
 
 // fullscreen mode
-bool fullscreen = false;
+bool fullscreen = true;
 
 // mirrored display
 bool mirroredDisplay = false;
@@ -79,7 +79,7 @@ const float TORUS_DISTANCE = 0.1;
 const float INNER_THRESHOLD = 0.001;
 const float OUTER_THRESHOLD = 0.05;
 
-const float SPRING_CONSTANT = 2000;
+const float SPRING_CONSTANT = 1000;
 
 const float PARTICLE_BOX = 0.17;
 const float PARTICLE_BOX_HEIGHT = 0.03;
@@ -92,9 +92,9 @@ const int ELECTRON = 0;
 const int PROTON = 1;
 const int NEUTRON = 2;
 
-const int NUM_ATOMS = 8;
+const int NUM_ATOMS = 6;
 
-const double CLEAR_SCREEN_TIMEOUT = 0.1;
+const double CLEAR_SCREEN_TIMEOUT = 0.15;
 
 //------------------------------------------------------------------------------
 // DECLARED VARIABLES
@@ -492,9 +492,9 @@ int main( int argc, char* argv[] )
     //--------------------------------------------------------------------------
 
     // create a font
-    cFont *font = NEW_CFONTCALIBRI20();
-    cFont *font_name = NEW_CFONTCALIBRI22();
-    cFont *font_label = NEW_CFONTCALIBRI72();
+    cFont *font = NEW_CFONTCALIBRI32();
+    cFont *font_name = NEW_CFONTCALIBRI36();
+    cFont *font_label = NEW_CFONTCALIBRI144();
 
     // create a label to display the haptic rate of the simulation
     labelHapticRate = new cLabel( font );
@@ -531,8 +531,8 @@ int main( int argc, char* argv[] )
     }
 
     clear_screen = new cLabel( font_label );
-    clear_screen->m_fontColor.setBlack();
-    clear_screen->setString( "CLEAR" );
+    clear_screen->m_fontColor.setGreen();
+    clear_screen->setString( "WELL DONE" );
 
     //--------------------------------------------------------------------------
     // START SIMULATION
@@ -708,8 +708,6 @@ void updateGraphics( void )
         timeout_start = clock();
 
         show_clear_screen = true;
-        // Reset screen
-        resetScreen();
 
         // Get new random atom
         getNewAtom( rand() % NUM_ATOMS + 1 );
@@ -717,6 +715,8 @@ void updateGraphics( void )
     // If timeout
     if ( show_clear_screen && ( ( clock() - timeout_start )/( double )CLOCKS_PER_SEC ) > CLEAR_SCREEN_TIMEOUT )
     {
+        // Reset screen
+        resetScreen();
         show_clear_screen = false;
         camera->m_frontLayer->removeChild( clear_screen );
     }
